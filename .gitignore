@@ -1,0 +1,23 @@
+# Build
+
+.next
+.swc
+tsconfig.tsbuildinfo
+
+# Dependency directories
+
+node_modules/
+
+# Dotfiles
+
+.env*
+.vscode/*
+!.vscode/extensions.json
+
+# Package managers
+
+yarn-debug.log*
+yarn-error.log*
+
+# Public
+
