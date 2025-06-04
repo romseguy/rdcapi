@@ -1,6 +1,7 @@
 import cors from "cors";
 import nextConnect from "next-connect";
 import sql from "@/sql";
+import { NextApiRequest, NextApiResponse } from "next";
 
 // const cors = Cors({
 //   methods: ["POST", "GET", "HEAD"],
@@ -15,7 +16,7 @@ import sql from "@/sql";
 // };
 
 //const handler = async (req, res) => {
-const handler = nextConnect()
+const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .get(async (req, res) => {
     try {

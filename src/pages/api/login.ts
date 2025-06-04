@@ -2,8 +2,9 @@ import cors from "cors";
 import nextConnect from "next-connect";
 import { createPagesServerClient } from "@supabase/auth-helpers-nextjs";
 import { SignInWithPasswordCredentials } from "@supabase/supabase-js";
+import { NextApiRequest, NextApiResponse } from "next";
 
-const handler = nextConnect()
+const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .get(async (req, res) => {
     try {
