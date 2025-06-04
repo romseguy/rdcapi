@@ -1,21 +1,42 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import cors from "cors";
+import nextConnect from "next-connect";
+import { createPagesServerClient } from "@supabase/auth-helpers-nextjs";
 import { SignInWithPasswordCredentials } from "@supabase/supabase-js";
 
-const email = "";
-const password = "";
+const handler = nextConnect()
+  .use(cors())
+  .get(async (req, res) => {
+    try {
+      const supabase = createPagesServerClient({ req, res });
+      const access_token = req.query.at;
+      const refresh_token = req.query.rt;
+      const {
+        data: { user, session },
+      } = await supabase.auth.setSession({
+        access_token,
+        refresh_token,
+      });
 
-export default async function handler(req, res) {
-  const cookieStore = { get() {}, set() {}, remove() {} };
-  const supabase = createRouteHandlerClient<any>({
-    cookies: () => cookieStore,
+      res.json(user);
+    } catch (error) {
+      res.send("n");
+    }
+  })
+  .post(async (req, res) => {
+    try {
+      const supabase = createPagesServerClient({ req, res });
+      const { email, password } = req.body;
+      const creds: SignInWithPasswordCredentials = { email, password };
+      const resp = await supabase.auth.signInWithPassword(creds);
+      if (resp.error) {
+        const respp = await supabase.auth.signUp(creds);
+        if (respp.error) throw respp.error;
+        return res.json(resp.data);
+      }
+      res.json(resp.data);
+    } catch (error) {
+      res.send("n");
+    }
   });
 
-  try {
-    const creds: SignInWithPasswordCredentials = { email, password };
-    const resp = await supabase.auth.signInWithPassword(creds);
-    if (resp.error) throw resp.error;
-    res.send("o");
-  } catch (error) {
-    res.send("n");
-  }
-}
+export default handler;

@@ -20,7 +20,23 @@ const handler = nextConnect()
   .get(async (req, res) => {
     try {
       //await init(req, res);
-      const data = await sql`SELECT * FROM books`;
+
+      const libraries = await sql`SELECT * FROM libraries;`;
+      const books = await sql`SELECT * FROM books WHERE library_id = 1;`;
+      const notes =
+        await sql`SELECT * FROM books INNER JOIN notes ON books.id = notes.book_id;`;
+      // console.log("🚀 ~ .get ~ libraries:", libraries);
+      // console.log("🚀 ~ .get ~ books:", books);
+
+      // const books =
+      //   await sql`SELECT * FROM libraries INNER JOIN books ON libraries.id = books.library_id;`;
+
+      const data = {
+        libraries,
+        books,
+        notes,
+      };
+
       res.json(data);
     } catch (error) {
       res.send("n");
