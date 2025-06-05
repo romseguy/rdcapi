@@ -22,10 +22,16 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
     try {
       //await init(req, res);
 
+      const users = await sql`SELECT * FROM "auth"."users";`;
       const libraries = await sql`SELECT * FROM libraries;`;
+      //console.log("🚀 ~ .get ~ users:", users);
       const books = await sql`SELECT * FROM books WHERE library_id = 1;`;
       const notes =
-        await sql`SELECT * FROM books INNER JOIN notes ON books.id = notes.book_id;`;
+        await sql`SELECT public.notes.*, auth.users.email FROM public.books
+        INNER JOIN public.notes ON public.books.id = public.notes.book_id
+        INNER JOIN auth.users ON auth.users.id = public.notes.created_by
+        ;`;
+      console.log("🚀 ~ .get ~ notes:", notes);
       // console.log("🚀 ~ .get ~ libraries:", libraries);
       // console.log("🚀 ~ .get ~ books:", books);
 
@@ -40,6 +46,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
 
       res.json(data);
     } catch (error) {
+      console.log("🚀 ~ .get ~ error:", error);
       res.send("n");
     }
   });
