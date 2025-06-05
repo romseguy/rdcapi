@@ -1,15 +1,16 @@
 import cors from "cors";
 import nextConnect from "next-connect";
 import { NextApiRequest, NextApiResponse } from "next";
-import { createPagesServerClient } from "@supabase/auth-helpers-nextjs";
 
 import { Client } from "pg";
 import format from "pg-format";
+import sql from "@/sql";
+import { createPagesServerClient } from "@supabase/auth-helpers-nextjs";
 
 const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
-  .post(async (req, res) => {
-    const prefix = "🚀 ~ comments.post ~ ";
+  .delete(async (req, res) => {
+    const prefix = new Date() + " ~ comments.delete ~ ";
     let client;
 
     try {
@@ -22,28 +23,27 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       });
       if (!user) throw new Error("Vous devez être identifié");
 
-      const comment = req.body.comment;
-      console.log("🚀 ~ .post ~ comment:", comment);
+      const id = req.query.id;
+      console.log("🚀 ~ .delete ~ id:", id);
 
-      if (!comment || !comment.note_id)
-        throw new Error("Vous devez sélectionner une citation à commenter");
+      if (!id)
+        throw new Error("Vous devez sélectionner un commentaire à supprimer");
 
       client = new Client({
         connectionString: process.env.DATABASE_URL,
       });
       await client.connect();
-      const sql = format(
-        'INSERT INTO "public"."comments" ("html", "note_id", "created_by") VALUES (\'%s\', \'%s\', \'%s\') RETURNING *',
-        comment.html,
-        comment.note_id,
+      const query = format(
+        'DELETE FROM "public"."comments" WHERE "id" = \'%s\' AND "created_by" = \'%s\' RETURNING *',
+        id,
         user.id,
       );
-      console.log("🚀 ~ .post ~ sql:", sql);
-      const res2 = await client.query(sql);
+      console.log("🚀 ~ .delete ~ query:", query);
+      const res2 = await client.query(query);
       if (res2.rowCount !== 1)
-        throw new Error("Le commentaire n'a pas pu être ajouté");
+        throw new Error("Le commentaire n'a pas pu être supprimé");
 
-      res.json({ ...res2.rows[0], email: user.email });
+      res.send("o");
     } catch (error) {
       console.log(prefix + "error:", error);
       res.send({ error, message: error.message });

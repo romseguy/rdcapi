@@ -24,6 +24,8 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
     }
   })
   .post(async (req, res) => {
+    const prefix = new Date() + " ~ login.post ~ ";
+
     try {
       const supabase = createPagesServerClient({ req, res });
       const { email, password } = req.body;
@@ -32,11 +34,12 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       if (resp.error) {
         const respp = await supabase.auth.signUp(creds);
         if (respp.error) throw respp.error;
-        return res.json(resp.data);
+        return res.json(respp.data);
       }
       res.json(resp.data);
     } catch (error) {
-      res.send("n");
+      console.log(prefix + "error:", error);
+      res.send({ error, message: error.message });
     }
   });
 

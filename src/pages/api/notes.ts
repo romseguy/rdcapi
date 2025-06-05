@@ -9,6 +9,9 @@ import format from "pg-format";
 const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .post(async (req, res) => {
+    const prefix = new Date() + " ~ notes.post ~ ";
+    let client;
+
     try {
       const supabase = createPagesServerClient({ req, res });
       const {
@@ -24,23 +27,27 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
 
       if (!note.book_id) throw new Error("Vous devez sélectionner un livre");
 
-      const client = new Client({
+      client = new Client({
         connectionString: process.env.DATABASE_URL,
       });
       await client.connect();
-      const sql = format(
-        'INSERT INTO "public"."notes" ("desc", "book_id", "created_by") VALUES (\'%s\', \'%s\', \'%s\')',
+      const query = format(
+        'INSERT INTO "public"."notes" ("desc", "book_id", "created_by") VALUES (\'%s\', \'%s\', \'%s\') RETURNING *',
         note.desc,
         note.book_id,
         user.id,
       );
-      await client.query(sql);
-      await client.end();
+      console.log("🚀 ~ .post ~ query:", query);
+      const res2 = await client.query(query);
+      if (res2.rowCount !== 1)
+        throw new Error("La citation n'a pas pu être ajoutée");
 
       res.send("o");
     } catch (error) {
-      console.log("🚀 ~ .post ~ error:", error);
+      console.log(prefix + "error:", error);
       res.send({ error, message: error.message });
+    } finally {
+      await client.end();
     }
   });
 
