@@ -25,7 +25,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       //const users = await sql`SELECT * FROM "auth"."users";`;
 
       const libraries = await sql`SELECT * FROM libraries;`;
-      const books = await sql`SELECT * FROM books WHERE library_id = 1;`;
+      const books = await sql`SELECT * FROM books;`;
       const notes =
         await sql`SELECT public.notes.*, auth.users.email FROM public.books
         INNER JOIN public.notes ON public.books.id = public.notes.book_id
