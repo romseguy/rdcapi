@@ -19,7 +19,9 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
   })
   .put(async (req, res) => {
     const prefix = new Date() + " ~ note.put ~ ";
-    let client;
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+    });
 
     try {
       const supabase = createPagesServerClient({ req, res });
@@ -37,9 +39,6 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       if (!note)
         throw new Error("Vous devez sélectionner une citation à modifier");
 
-      client = new Client({
-        connectionString: process.env.DATABASE_URL,
-      });
       await client.connect();
       // const query = format(
       //   'UPDATE "public"."notes" SET "desc" = \'%s\' WHERE "id" = \'%s\'',
@@ -51,12 +50,12 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
         'UPDATE "public"."notes" SET "desc" = $1, "desc_en" = $2 WHERE "id" = $3';
       await client.query(query, [note.desc, note.desc_en || "", note.id]);
 
+      await client.end();
       res.send("o");
     } catch (error) {
+      await client.end();
       console.log(prefix + "error:", error);
       res.send({ error, message: error.message });
-    } finally {
-      await client.end();
     }
   })
   .delete(async (req, res) => {
