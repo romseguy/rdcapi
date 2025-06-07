@@ -19,6 +19,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .get(async (req, res) => {
+    const prefix = new Date() + " ~ notes.post ~ ";
+
     try {
       //await init(req, res);
 
@@ -27,14 +29,14 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       const libraries = await sql`SELECT * FROM libraries;`;
       const books = await sql`SELECT * FROM books;`;
       const notes =
-        await sql`SELECT public.notes.*, auth.users.email FROM public.books
+        await sql`SELECT public.notes.*, auth.users.email AS note_email FROM public.books
         INNER JOIN public.notes ON public.books.id = public.notes.book_id
         INNER JOIN auth.users ON auth.users.id = public.notes.created_by
         ;`;
       const comments = await sql`
-      SELECT public.comments.*, auth.users.email FROM public.comments
+      SELECT public.comments.*, auth.users.email AS comment_email FROM public.comments
       INNER JOIN public.notes ON public.comments.note_id = public.notes.id
-              INNER JOIN auth.users ON auth.users.id = public.notes.created_by
+              INNER JOIN auth.users ON auth.users.id = public.comments.created_by
       `;
       // const books =
       //   await sql`SELECT * FROM libraries INNER JOIN books ON libraries.id = books.library_id;`;
@@ -48,7 +50,8 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
 
       res.json(data);
     } catch (error) {
-      res.send("n");
+      console.log(prefix + "error:", error);
+      res.send({ error, message: error.message });
     }
   });
 

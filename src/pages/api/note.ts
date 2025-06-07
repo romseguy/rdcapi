@@ -47,8 +47,9 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       //   note.id,
       // );
       // console.log("🚀 ~ .put ~ query:", query);
-      const query = 'UPDATE "public"."notes" SET "desc" = $1 WHERE "id" = $2';
-      await client.query(query, [note.desc, note.id]);
+      const query =
+        'UPDATE "public"."notes" SET "desc" = $1, "desc_en" = $2 WHERE "id" = $3';
+      await client.query(query, [note.desc, note.desc_en || "", note.id]);
 
       res.send("o");
     } catch (error) {
