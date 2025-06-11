@@ -10,9 +10,18 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .post(async (req, res) => {
     const prefix = new Date() + " ~ notes.post ~ ";
-    const client = new Client({
-      connectionString: process.env.DATABASE_URL,
-    });
+    const client =
+      process.env.NODE_ENV === "production"
+        ? new Client({
+            connectionString: process.env.DATABASE_URL,
+          })
+        : {
+            connect() {},
+            end() {},
+            query(sql, values) {
+              return { rowCount: 1 };
+            },
+          };
 
     try {
       const supabase = createPagesServerClient({ req, res });
@@ -25,7 +34,6 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       if (!user) throw new Error("Vous devez être identifié");
 
       const note = req.body.note;
-      console.log("🚀 ~ .post ~ note:", note);
 
       if (!note.book_id) throw new Error("Vous devez sélectionner un livre");
 
@@ -46,7 +54,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
         throw new Error("La citation n'a pas pu être ajoutée");
 
       await client.end();
-      res.send("o");
+      res.send(res2.rows[0]);
     } catch (error) {
       await client.end();
       console.log(prefix + "error:", error);

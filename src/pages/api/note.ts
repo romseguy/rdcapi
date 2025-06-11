@@ -32,32 +32,68 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
   })
   .put(async (req, res) => {
     const prefix = new Date() + " ~ PUT /note ~ ";
-    const client = new Client({
-      connectionString: process.env.DATABASE_URL,
-    });
+    console.log(prefix, process.env.NODE_ENV);
+
+    const client =
+      process.env.NODE_ENV === "production"
+        ? new Client({
+            connectionString: process.env.DATABASE_URL,
+          })
+        : {
+            connect() {},
+            end() {},
+            query(sql, values) {
+              return { rowCount: 1 };
+            },
+          };
 
     try {
-      const supabase = createPagesServerClient({ req, res });
-      const {
-        data: { user, session },
-      } = await supabase.auth.setSession({
-        access_token: req.headers.at,
-        refresh_token: req.headers.rt,
-      });
-      if (!user) throw new Error("Vous devez être identifié");
+      if (process.env.NODE_ENV === "production") {
+        const supabase = createPagesServerClient({ req, res });
+        const {
+          data: { user, session },
+        } = await supabase.auth.setSession({
+          access_token: req.headers.at,
+          refresh_token: req.headers.rt,
+        });
+        if (!user) throw new Error("Vous devez être identifié");
+      }
 
       const note = req.body.note;
       if (!note)
         throw new Error("Vous devez sélectionner une citation à modifier");
 
       await client.connect();
-      const query =
-        'UPDATE "public"."notes" SET "desc" = $1, "desc_en" = $2 WHERE "id" = $3 RETURNING *';
-      const res2 = await client.query(query, [
-        note.desc,
-        note.desc_en || "",
-        note.id,
-      ]);
+      let query = 'UPDATE "public"."notes" SET ';
+      let values = [];
+      let fieldId = 1;
+      let fields = [];
+
+      if (note.desc) {
+        fields.push(`"desc" = $${fieldId}`);
+        values.push(note.desc);
+        fieldId++;
+      }
+      if (note.desc_en) {
+        fields.push(`"desc_en" = $${fieldId}`);
+        values.push(note.desc_en);
+        fieldId++;
+      }
+      if (note.page) {
+        fields.push(`"page" = $${fieldId}`);
+        values.push(note.page);
+        fieldId++;
+      }
+
+      query += fields.join(",");
+
+      query += ` WHERE "id" = $${fieldId} RETURNING *`;
+      values.push(note.id);
+
+      console.log(prefix + "sql", query);
+      console.log(prefix + "values", values);
+
+      const res2 = await client.query(query, values);
       if (res2.rowCount !== 1)
         throw new Error("La citation n'a pas pu être modifiée");
       await client.end();
@@ -94,7 +130,8 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       if (res2.rowCount !== 1)
         throw new Error("La citation n'a pas pu être supprimée");
       await client.end();
-      res.send(res2.row[0]);
+      //res.send(res2.row[0]);
+      res.send("o");
     } catch (error) {
       await client.end();
       console.log(prefix + "error:", error);
