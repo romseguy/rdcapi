@@ -19,7 +19,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
             connect() {},
             end() {},
             query(sql, values) {
-              return { rowCount: 1 };
+              return { rowCount: 1, rows: [{ id: "999" }] };
             },
           };
 
