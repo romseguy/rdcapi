@@ -6,6 +6,8 @@ import { Client } from "pg";
 import sql from "@/sql";
 import { createPagesServerClient } from "@supabase/auth-helpers-nextjs";
 
+const checkLogin = process.env.NODE_ENV === "production";
+
 const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .get(async (req, res) => {
@@ -32,7 +34,6 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
   })
   .put(async (req, res) => {
     const prefix = new Date() + " ~ PUT /note ~ ";
-    console.log(prefix, process.env.NODE_ENV);
 
     const client =
       process.env.NODE_ENV === "production"
@@ -48,7 +49,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
           };
 
     try {
-      if (process.env.NODE_ENV === "production") {
+      if (checkLogin) {
         const supabase = createPagesServerClient({ req, res });
         const {
           data: { user, session },
@@ -59,7 +60,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
         if (!user) throw new Error("Vous devez être identifié");
       }
 
-      const note = req.body.note;
+      const { note } = JSON.parse(req.body);
       if (!note)
         throw new Error("Vous devez sélectionner une citation à modifier");
 
@@ -91,14 +92,14 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       values.push(note.id);
 
       console.log(prefix + "sql", query);
-      console.log(prefix + "values", values);
+      //console.log(prefix + "values", values);
 
       const res2 = await client.query(query, values);
       if (res2.rowCount !== 1)
         throw new Error("La citation n'a pas pu être modifiée");
       await client.end();
       //res.send(res2.row[0]);
-      res.send("o");
+      res.send({});
     } catch (error) {
       await client.end();
       res.send({ error, message: error.message });
@@ -115,14 +116,16 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       if (!id)
         throw new Error("Vous devez sélectionner une citation à supprimer");
 
-      const supabase = createPagesServerClient({ req, res });
-      const {
-        data: { user, session },
-      } = await supabase.auth.setSession({
-        access_token: req.headers.at,
-        refresh_token: req.headers.rt,
-      });
-      if (!user) throw new Error("Vous devez être identifié");
+      if (checkLogin) {
+        const supabase = createPagesServerClient({ req, res });
+        const {
+          data: { user, session },
+        } = await supabase.auth.setSession({
+          access_token: req.headers.at,
+          refresh_token: req.headers.rt,
+        });
+        if (!user) throw new Error("Vous devez être identifié");
+      }
 
       await client.connect();
       const query = 'DELETE FROM "public"."notes" WHERE "id" = $1 RETURNING *';
@@ -131,7 +134,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
         throw new Error("La citation n'a pas pu être supprimée");
       await client.end();
       //res.send(res2.row[0]);
-      res.send("o");
+      res.send({});
     } catch (error) {
       await client.end();
       console.log(prefix + "error:", error);

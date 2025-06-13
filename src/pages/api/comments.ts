@@ -22,7 +22,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       });
       if (!user) throw new Error("Vous devez être identifié");
 
-      const comment = req.body.comment;
+      const { comment } = JSON.parse(req.body);
       console.log("🚀 ~ .post ~ comment:", comment);
 
       if (!comment || !comment.note_id)

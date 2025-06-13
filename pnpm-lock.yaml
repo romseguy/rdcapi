@@ -23,6 +23,9 @@ dependencies:
   next-connect:
     specifier: 0.10.1
     version: 0.10.1
+  nodemailer:
+    specifier: ^7.0.3
+    version: 7.0.3
   pg:
     specifier: ^8.16.0
     version: 8.16.0
@@ -367,6 +370,11 @@ packages:
     transitivePeerDependencies:
       - '@babel/core'
       - babel-plugin-macros
+    dev: false
+
+  /nodemailer@7.0.3:
+    resolution: {integrity: sha512-Ajq6Sz1x7cIK3pN6KesGTah+1gnwMnx5gKl3piQlQQE/PwyJ4Mbc8is2psWYxK3RJTVeqsDaCv8ZzXLCDHMTZw==}
+    engines: {node: '>=6.0.0'}
     dev: false
 
   /object-assign@4.1.1:
