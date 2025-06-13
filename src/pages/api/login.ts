@@ -23,7 +23,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
         if (!user) throw new Error("Cet utilisateur est introuvable");
 
         res.json(user);
-      } else res.json({});
+      } else res.json({ email: "localhost" });
     } catch (error) {
       console.log(prefix + "error:", error);
       res.send({ error, message: error.message });
@@ -35,7 +35,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
     try {
       if (process.env.NODE_ENV === "production") {
         const supabase = createPagesServerClient({ req, res });
-        const { email, password } = req.body;
+        const { email, password } = JSON.parse(req.body);
         const creds: SignInWithPasswordCredentials = { email, password };
         const resp = await supabase.auth.signInWithPassword(creds);
         if (resp.error) {

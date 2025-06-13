@@ -43,7 +43,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       if (res2.rowCount !== 1)
         throw new Error("Le commentaire n'a pas pu être supprimé");
 
-      res.send("o");
+      res.send({});
     } catch (error) {
       console.log(prefix + "error:", error);
       res.send({ error, message: error.message });

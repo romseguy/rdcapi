@@ -33,7 +33,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       });
       if (!user) throw new Error("Vous devez être identifié");
 
-      const note = req.body.note;
+      const { note } = JSON.parse(req.body);
 
       if (!note.book_id) throw new Error("Vous devez sélectionner un livre");
 

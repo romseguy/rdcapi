@@ -19,7 +19,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .get(async (req, res) => {
-    const prefix = new Date() + " ~ notes.post ~ ";
+    const prefix = new Date() + " ~ GET / ~ ";
+    console.log(prefix);
 
     try {
       //await init(req, res);
