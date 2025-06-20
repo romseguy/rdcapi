@@ -9,9 +9,10 @@ import format from "pg-format";
 const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .post(async (req, res) => {
-    const prefix = new Date() + " ~ notes.post ~ ";
+    const prefix =
+      process.env.NEXT_PUBLIC_ENV + " ~ " + new Date() + " ~ notes.post ~ ";
     const client =
-      process.env.NODE_ENV === "production"
+      process.env.NEXT_PUBLIC_ENV === "production"
         ? new Client({
             connectionString: process.env.DATABASE_URL,
           })
@@ -38,18 +39,10 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       if (!note.book_id) throw new Error("Vous devez sélectionner un livre");
 
       await client.connect();
-      const query = format(
-        'INSERT INTO "public"."notes" ("desc", "book_id", "created_by") VALUES ($1, $2, $3) RETURNING *',
-        note.desc,
-        note.book_id,
-        user.id,
-      );
-      console.log("🚀 ~ .post ~ query:", query);
-      const res2 = await client.query(query, [
-        note.desc,
-        note.book_id,
-        user.id,
-      ]);
+      const query =
+        'INSERT INTO "public"."notes" ("desc", "book_id", "created_by") VALUES ($1, $2, $3) RETURNING *';
+      const values = [note.desc, note.book_id, user.id];
+      const res2 = await client.query(query, values);
       if (res2.rowCount !== 1)
         throw new Error("La citation n'a pas pu être ajoutée");
 

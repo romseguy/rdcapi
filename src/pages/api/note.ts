@@ -6,15 +6,24 @@ import { Client } from "pg";
 import sql from "@/sql";
 import { createPagesServerClient } from "@supabase/auth-helpers-nextjs";
 
-const checkLogin = process.env.NODE_ENV === "production";
+const checkLogin = process.env.NEXT_PUBLIC_ENV === "production";
 
 const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .get(async (req, res) => {
     const prefix = new Date() + " ~ GET /note ~ ";
-    const client = new Client({
-      connectionString: process.env.DATABASE_URL,
-    });
+    const client =
+      process.env.NEXT_PUBLIC_ENV === "production"
+        ? new Client({
+            connectionString: process.env.DATABASE_URL,
+          })
+        : {
+            connect() {},
+            end() {},
+            query(sql, values) {
+              return { rowCount: 1 };
+            },
+          };
 
     try {
       const id = req.query.id;
@@ -36,7 +45,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
     const prefix = new Date() + " ~ PUT /note ~ ";
 
     const client =
-      process.env.NODE_ENV === "production"
+      process.env.NEXT_PUBLIC_ENV === "production"
         ? new Client({
             connectionString: process.env.DATABASE_URL,
           })
@@ -91,7 +100,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       query += ` WHERE "id" = $${fieldId} RETURNING *`;
       values.push(note.id);
 
-      console.log(prefix + "sql", query);
+      //console.log(prefix + "sql", query);
       //console.log(prefix + "values", values);
 
       const res2 = await client.query(query, values);
@@ -107,9 +116,18 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
   })
   .delete(async (req, res) => {
     const prefix = new Date() + " ~ DELETE /note ~ ";
-    const client = new Client({
-      connectionString: process.env.DATABASE_URL,
-    });
+    const client =
+      process.env.NEXT_PUBLIC_ENV === "production"
+        ? new Client({
+            connectionString: process.env.DATABASE_URL,
+          })
+        : {
+            connect() {},
+            end() {},
+            query(sql, values) {
+              return { rowCount: 1 };
+            },
+          };
 
     try {
       const id = req.query.id;

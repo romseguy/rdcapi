@@ -10,8 +10,20 @@ import { createPagesServerClient } from "@supabase/auth-helpers-nextjs";
 const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .delete(async (req, res) => {
-    const prefix = new Date() + " ~ comments.delete ~ ";
-    let client;
+    const prefix = new Date() + " ~ comment.delete ~ ";
+    console.log(prefix);
+    const client =
+      process.env.NEXT_PUBLIC_ENV === "production"
+        ? new Client({
+            connectionString: process.env.DATABASE_URL,
+          })
+        : {
+            connect() {},
+            end() {},
+            query(sql, values) {
+              return { rowCount: 1 };
+            },
+          };
 
     try {
       const supabase = createPagesServerClient({ req, res });
@@ -24,31 +36,27 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       if (!user) throw new Error("Vous devez être identifié");
 
       const id = req.query.id;
-      console.log("🚀 ~ .delete ~ id:", id);
+      console.log(prefix + "id", id);
 
       if (!id)
         throw new Error("Vous devez sélectionner un commentaire à supprimer");
 
-      client = new Client({
-        connectionString: process.env.DATABASE_URL,
-      });
       await client.connect();
       const query = format(
-        'DELETE FROM "public"."comments" WHERE "id" = \'%s\' AND "created_by" = \'%s\' RETURNING *',
+        'DELETE FROM "public"."comments" WHERE "id" = \'%s\' RETURNING *',
         id,
-        user.id,
       );
-      console.log("🚀 ~ .delete ~ query:", query);
+      console.log(prefix + "query", query);
       const res2 = await client.query(query);
       if (res2.rowCount !== 1)
         throw new Error("Le commentaire n'a pas pu être supprimé");
 
+      await client.end();
       res.send({});
     } catch (error) {
       console.log(prefix + "error:", error);
-      res.send({ error, message: error.message });
-    } finally {
       await client.end();
+      res.send({ error, message: error.message });
     }
   });
 

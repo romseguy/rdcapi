@@ -9,7 +9,7 @@ import format from "pg-format";
 const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .post(async (req, res) => {
-    const prefix = "🚀 ~ comments.post ~ ";
+    const prefix = new Date() + " ~ comments.post ~ ";
     let client;
 
     try {
@@ -43,7 +43,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       if (res2.rowCount !== 1)
         throw new Error("Le commentaire n'a pas pu être ajouté");
 
-      res.json({ ...res2.rows[0], email: user.email });
+      res.json({ ...res2.rows[0], comment_email: user.email });
     } catch (error) {
       console.log(prefix + "error:", error);
       res.send({ error, message: error.message });

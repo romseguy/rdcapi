@@ -8,9 +8,10 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .get(async (req, res) => {
     const prefix = new Date() + " ~ GET /login ~ ";
+    console.log(prefix);
 
     try {
-      if (process.env.NODE_ENV === "production") {
+      if (process.env.NEXT_PUBLIC_ENV === "production") {
         const supabase = createPagesServerClient({ req, res });
         const access_token = req.headers.at as string;
         const refresh_token = req.headers.rt as string;
@@ -33,7 +34,7 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
     const prefix = new Date() + " ~ POST /login ~ ";
 
     try {
-      if (process.env.NODE_ENV === "production") {
+      if (process.env.NEXT_PUBLIC_ENV === "production") {
         const supabase = createPagesServerClient({ req, res });
         const { email, password } = JSON.parse(req.body);
         const creds: SignInWithPasswordCredentials = { email, password };
