@@ -25,9 +25,9 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
 
         res.json(user);
       } else res.json({ email: "localhost" });
-    } catch (error) {
-      console.log(prefix + "error:", error);
-      res.send({ error, message: error.message });
+    } catch (error: any) {
+      console.log(" ~ .get ~ error:", error);
+      res.send({ error: error.message });
     }
   })
   .post(async (req, res) => {
@@ -43,16 +43,16 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
           if (password.length >= 6) {
             const respp = await supabase.auth.signUp(creds);
             if (respp.error) throw respp.error;
+            return res.json(respp.data);
           } else {
             throw new Error("Identifiants incorrects");
           }
-          return res.json(respp.data);
         }
         res.json(resp.data);
       } else res.json({});
-    } catch (error) {
-      console.log(prefix + "error:", error);
-      res.send({ error, message: error.message });
+    } catch (error: any) {
+      console.log(" ~ .post ~ error:", error);
+      res.send({ error: error.message });
     }
   });
 

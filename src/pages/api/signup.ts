@@ -18,7 +18,8 @@ export default async function handler(req, res) {
     const resp = await supabase.auth.signUp(creds);
     if (resp.error) throw resp.error;
     res.send({});
-  } catch (error) {
-    res.send({});
+  } catch (error: any) {
+    console.log(" ~ handler ~ error:", error);
+    res.send({ error: error.message });
   }
 }

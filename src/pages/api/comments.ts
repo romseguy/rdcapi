@@ -1,54 +1,69 @@
+import { loginError } from "@/errors";
+import { localize, pre } from "@/utils";
 import cors from "cors";
-import nextConnect from "next-connect";
 import { NextApiRequest, NextApiResponse } from "next";
-import { createPagesServerClient } from "@supabase/auth-helpers-nextjs";
-
-import { Client } from "pg";
-import format from "pg-format";
+import nextConnect from "next-connect";
 
 const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .post(async (req, res) => {
-    const prefix = new Date() + " ~ comments.post ~ ";
-    let client;
-
+    const { client, user, locale } = await pre(req, res, {
+      prefix: "comments.post",
+    });
     try {
-      const supabase = createPagesServerClient({ req, res });
-      const {
-        data: { user, session },
-      } = await supabase.auth.setSession({
-        access_token: req.headers.at,
-        refresh_token: req.headers.rt,
-      });
-      if (!user) throw new Error("Vous devez être identifié");
+      if (!user) throw loginError(locale);
+      const { comment } = req.body;
+      if (!comment)
+        throw new Error(
+          localize(locale)(
+            "Vous devez sélectionner une citation à commenter",
+            "You must select a quote to comment on",
+          ),
+        );
 
-      const { comment } = JSON.parse(req.body);
-      console.log("🚀 ~ .post ~ comment:", comment);
-
-      if (!comment || !comment.note_id)
-        throw new Error("Vous devez sélectionner une citation à commenter");
-
-      client = new Client({
-        connectionString: process.env.DATABASE_URL,
-      });
       await client.connect();
-      const sql = format(
-        'INSERT INTO "public"."comments" ("html", "note_id", "created_by") VALUES (\'%s\', \'%s\', \'%s\') RETURNING *',
-        comment.html,
-        comment.note_id,
-        user.id,
-      );
-      console.log("🚀 ~ .post ~ sql:", sql);
-      const res2 = await client.query(sql);
-      if (res2.rowCount !== 1)
-        throw new Error("Le commentaire n'a pas pu être ajouté");
+      let query = 'INSERT INTO "public"."comments" (';
+      let values: string[] = [];
+      let commentValues: string[] = [];
+      let fieldId = 1;
+      let fields: string[] = [];
 
-      res.json({ ...res2.rows[0], comment_email: user.email });
-    } catch (error) {
-      console.log(prefix + "error:", error);
-      res.send({ error, message: error.message });
-    } finally {
+      if (comment.note_id) {
+        fields.push(`"note_id"`);
+        values.push(`$${fieldId}`);
+        commentValues.push(comment.note_id);
+        fieldId++;
+      }
+
+      fields.push(`"html"`);
+      values.push(`$${fieldId}`);
+      commentValues.push(comment.html);
+      fieldId++;
+
+      fields.push(`"created_by"`);
+      values.push(`$${fieldId}`);
+      commentValues.push(user.id);
+      fieldId++;
+
+      query += fields.join(",");
+      query += ") VALUES (";
+      query += values.join(",");
+      query += ") RETURNING *";
+      const res2 = await client.query(query, commentValues);
+      if (res2.rowCount !== 1)
+        throw new Error(
+          localize(locale)(
+            "Le commentaire n'a pas pu être ajouté",
+            "The comment could not be added",
+          ),
+        );
+
       await client.end();
+      res.json({ ...res2.rows[0], comment_email: user.email });
+    } catch (error: any) {
+      console.log(" ~ .post ~ error:", error);
+      await client.end();
+      res.send({ error: error.message });
     }
   });
 

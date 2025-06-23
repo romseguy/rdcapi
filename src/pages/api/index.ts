@@ -2,6 +2,7 @@ import cors from "cors";
 import nextConnect from "next-connect";
 import sql from "@/sql";
 import { NextApiRequest, NextApiResponse } from "next";
+import { pre } from "@/utils";
 
 // const cors = Cors({
 //   methods: ["POST", "GET", "HEAD"],
@@ -19,8 +20,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
   .get(async (req, res) => {
-    const prefix = new Date() + " ~ GET / ~ ";
-    console.log(prefix);
+    const { client, user, locale } = await pre(req, res, {
+      prefix: "index.get",
+    });
 
     try {
       //await init(req, res);
@@ -36,9 +38,13 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
         ;`;
       const comments = await sql`
       SELECT public.comments.*, auth.users.email AS comment_email FROM public.comments
-      INNER JOIN public.notes ON public.comments.note_id = public.notes.id
-              INNER JOIN auth.users ON auth.users.id = public.comments.created_by
+      INNER JOIN auth.users ON auth.users.id = public.comments.created_by
       `;
+      // const comments = await sql`
+      // SELECT public.comments.*, auth.users.email AS comment_email FROM public.comments
+      // INNER JOIN public.notes ON public.comments.note_id = public.notes.id
+      // INNER JOIN auth.users ON auth.users.id = public.comments.created_by
+      // `;
       // const books =
       //   await sql`SELECT * FROM libraries INNER JOIN books ON libraries.id = books.library_id;`;
 
@@ -50,9 +56,9 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       };
 
       res.json(data);
-    } catch (error) {
-      console.log(prefix + "error:", error);
-      res.send({ error, message: error.message });
+    } catch (error: any) {
+      console.log(" ~ .get ~ error:", error);
+      res.send({ error: error.message });
     }
   });
 
