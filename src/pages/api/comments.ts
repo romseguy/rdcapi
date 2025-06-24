@@ -34,6 +34,12 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
         commentValues.push(comment.note_id);
         fieldId++;
       }
+      if (comment.is_feedback) {
+        fields.push("is_feedback");
+        values.push(`$${fieldId}`);
+        commentValues.push("true");
+        fieldId++;
+      }
 
       fields.push(`"html"`);
       values.push(`$${fieldId}`);

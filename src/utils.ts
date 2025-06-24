@@ -22,14 +22,11 @@ export const pre = async (req, res, opts) => {
           connect() {},
           end() {},
           query(sql, values) {
-            console.log("🚀 ~ query ~ sql:", sql);
-            console.log("🚀 ~ query ~ values:", values);
             return { rowCount: 1, rows: [{ id: "999" }] };
           },
         };
 
   let { authorization, locale } = req.headers;
-
   locale =
     typeof locale === "string" && ["fr", "en"].includes(locale) ? locale : "fr";
 
@@ -48,12 +45,15 @@ export const pre = async (req, res, opts) => {
     const bearer = authorization.substring(7, authorization.length);
     if (typeof bearer !== "undefined" && bearer !== "undefined") {
       const token = JSON.parse(bearer);
-      const supabase = createPagesServerClient({ req, res });
-      const { data } = await supabase.auth.setSession({
-        access_token: token.access_token,
-        refresh_token: token.refresh_token,
-      });
-      user = data.user;
+      if (token.user) user = token.user;
+      else {
+        const supabase = createPagesServerClient({ req, res });
+        const { data } = await supabase.auth.setSession({
+          access_token: token.access_token,
+          refresh_token: token.refresh_token,
+        });
+        user = data.user;
+      }
     }
   }
 

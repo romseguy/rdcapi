@@ -63,16 +63,8 @@ const handler = nextConnect<NextApiRequest, NextApiResponse>()
       query += ` WHERE "id" = $${fieldId} RETURNING *`;
       values.push(note.id);
 
-      const res2 = await client.query(query, values);
-      if (res2.rowCount !== 1)
-        throw new Error(
-          localize(locale)(
-            "La citation n'a pas pu être modifiée",
-            "The quote could not be modified",
-          ),
-        );
+      await client.query(query, values);
       await client.end();
-      //res.send(res2.row[0]);
       res.send({});
     } catch (error: any) {
       console.log(" ~ .put ~ error:", error);
