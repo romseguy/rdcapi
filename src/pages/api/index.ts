@@ -1,8 +1,8 @@
-import cors from "cors";
-import nextConnect from "next-connect";
 import sql from "@/sql";
-import { NextApiRequest, NextApiResponse } from "next";
 import { pre } from "@/utils";
+import cors from "cors";
+import { NextApiRequest, NextApiResponse } from "next";
+import nextConnect from "next-connect";
 
 const handler = nextConnect<NextApiRequest, NextApiResponse>()
   .use(cors())
